@@ -816,6 +816,12 @@ class AgentLoopWorker:
         )
         if self.use_task_rewards:
             await self._compute_score([output], kwargs=kwargs)
+        else:
+            # When use_task_rewards=False, set reward_score to 0.0 so that
+            # rm_scores is always present in the output batch. This is required
+            # by trainers (e.g. V1 trainer) that unconditionally read rm_scores
+            # during advantage computation, even in distillation-only setups.
+            output.reward_score = 0.0
         await self._compute_teacher_logprobs(
             output,
             prompt_ids=output.prompt_ids,
